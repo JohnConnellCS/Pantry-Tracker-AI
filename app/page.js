@@ -1,8 +1,9 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Box, Stack, Typography, Button, Modal, TextField } from '@mui/material'
+import { Box, Button, Modal, Stack, TextField, Typography, IconButton } from '@mui/material'
 import { firestore } from '@/firebase'
+import DeleteIcon from '@mui/icons-material/Delete';
 import {
   collection,
   doc,
@@ -34,6 +35,8 @@ export default function Home() {
   const [itemName, setItemName] = useState('')
   const [quantity, setQuantity] = useState(1)
   const [removeQuantity, setRemoveQuantity] = useState(0)
+  const [showForm, setShowForm] = useState(false);
+
 
   const updateInventory = async () => {
     const snapshot = query(collection(firestore, 'inventory'))
@@ -113,107 +116,275 @@ export default function Home() {
 
   return (
     <Box
-      width="100vw"
+      display="flex"
+      flexDirection="column"
       height="100vh"
-      display={'flex'}
-      justifyContent={'center'}
-      flexDirection={'column'}
-      alignItems={'center'}
-      gap={2}
+      bgcolor="#202225"
+      padding={2}
     >
-      <Modal
-        open={open}
-        onClose={handleClose}
-        aria-labelledby="modal-modal-title"
-        aria-describedby="modal-modal-description"
-      >
-        <Box sx={style}>
-          <Typography id="modal-modal-title" variant="h6" component="h2">
-            Add Item
-          </Typography>
-          <Stack width="100%" direction={'row'} spacing={2}>
-            <TextField
-              id="outlined-basic"
-              label="Item"
-              variant="outlined"
-              fullWidth
-              value={itemName}
-              onChange={(e) => setItemName(e.target.value)}
-            />
-            <TextField
-              id="outlined-quantity"
-              label="Quantity"
-              variant="outlined"
-              fullWidth
-              value={quantity}
-              onChange={handleQuantityChange}
-            />
-            <Button
-              variant="outlined"
-              onClick={() => {
-                addItem(itemName, Number(quantity))
-                setItemName('')
-                setQuantity('')
-                handleClose()
+      {/* Top Section */}
+      <Box textAlign="center" marginBottom={4} >
+        <Typography variant="h3" color="#ffffff">Pantry Tracker AI</Typography>
+        <Typography variant="h6" color="#ffffff">Manage your pantry items</Typography>
+      </Box>
+
+      {/* Main Content */}
+      <Box display="flex" flex="1">
+        {/* Left Column */}
+        <Box 
+
+          width="50%"
+          display="flex"
+          flexDirection="column"
+          padding={2}
+          bgcolor="292225"
+          gap={2}
+        >
+          {/* Add Item Section */}
+          <Box
+            display="flex"
+            flexDirection="column"
+            alignItems="center"
+            gap={1}
+          >
+            <Typography variant="h6" color="#ffffff">Update Inventory</Typography>
+            <Box
+              display="flex"
+              justifyContent="center"
+              width="100%"
+            >
+              <Button
+                variant="contained"
+                onClick={() => setShowForm(true)}
+                sx={{
+                  width: '20%',
+                  bgcolor: '#5865F2', 
+                  '&:hover': {
+                    bgcolor: '#4752C4', 
+                  },
+                }}
+              >
+                Add Items
+              </Button>
+            </Box>
+          </Box>
+            
+          {/* Form Pop Up */}
+
+          {showForm && (
+            <Box
+              sx={{
+                position: 'absolute',
+                top: '50%',
+                left: '50%',
+                transform: 'translate(-50%, -50%)',
+                width: 400,
+                bgcolor: 'white', 
+                border: '.5px solid #000',
+                boxShadow: 24,
+                p: 4,
+                display: 'flex',
+                flexDirection: 'column',
+                gap: 3,
+                zIndex: 10,
               }}
             >
-              Add
-            </Button>
-          </Stack>
-        </Box>
-      </Modal>
-      <Button variant="contained" onClick={handleOpen}>
-        Add New Item
-      </Button>
-      <Box border={'1px solid #333'}>
-        <Box
-          width="800px"
-          height="100px"
-          bgcolor={'#ADD8E6'}
-          display={'flex'}
-          justifyContent={'center'}
-          alignItems={'center'}
-        >
-          <Typography variant={'h2'} color={'#333'} textAlign={'center'}>
-            My Pantry
-          </Typography>
-        </Box>
-        <Stack width="800px" height="300px" spacing={2} overflow={'auto'}>
-          {inventory.map(({ name, quantity }) => (
-            <Box
-              key={name}
-              width="100%"
-              minHeight="150px"
-              display={'flex'}
-              justifyContent={'space-between'}
-              alignItems={'center'}
-              bgcolor={'#f0f0f0'}
-              paddingX={5}
-            >
-              <Typography variant={'h3'} color={'#333'} textAlign={'center'}>
-                {name.charAt(0).toUpperCase() + name.slice(1)}
+              <Typography variant="h6" component="h2">
+                Add Item
               </Typography>
-              <Typography variant={'h3'} color={'#333'} textAlign={'center'}>
-                Quantity: {quantity}
-              </Typography>
-              <Stack direction={'row'} spacing={2}>
+              <Stack width="100%" direction="row" spacing={2}>
+                <TextField
+                  id="outlined-basic"
+                  label="Item"
+                  variant="outlined"
+                  fullWidth
+                  value={itemName}
+                  onChange={(e) => setItemName(e.target.value)}
+                />
+                <TextField
+                  id="outlined-quantity"
+                  label="Quantity"
+                  variant="outlined"
+                  fullWidth
+                  value={quantity}
+                  onChange={handleQuantityChange}
+                />
+              </Stack>
+              <Stack direction="row" spacing={2}>
                 <Button
                   variant="contained"
-                  onClick={() => addItem(name, 1)}
+                  onClick={() => {
+                    addItem(itemName, Number(quantity));
+                    setItemName('');
+                    setQuantity(1);
+                    setShowForm(false);
+                  }}
+                  sx={{
+                    bgcolor: '#5865F2',
+                    '&:hover': {
+                      bgcolor: '#4752C4',
+                    },
+                  }}
                 >
                   Add
                 </Button>
                 <Button
-                  variant="contained"
-                  onClick={() => removeItem(name, 1)}
+                  variant="outlined"
+                  onClick={() => setShowForm(false)}
+                  sx={{
+                    bgcolor: '#b9bbbe', // Gray background for the cancel button
+                  }}
                 >
-                  Remove
+                  Cancel
                 </Button>
               </Stack>
             </Box>
-          ))}
-        </Stack>
+          )}
+
+          {/* Future Content Section */}
+          <Box
+            flex="1"
+            bgcolor="#d0d0d0" // Medium gray background for the section
+            borderRadius={1}
+            padding={2}
+            display="flex"
+            alignItems="center"
+            justifyContent="center"
+          >
+            <Typography color="#666">Funny AI That Definitely Works!</Typography>
+          </Box>
+        </Box>
+
+        {/* Right Column */}
+        <Box
+          width="50%"
+          display="flex"
+          flexDirection="column"
+          padding={2}
+          bgcolor="292225"
+        >
+          {/* Pantry Items */}
+          <Box
+            width="100%"
+            bgcolor={'#36393f'}
+            padding={2}
+            textAlign={'center'}
+            marginBottom={2}
+            borderRadius={1}
+          >
+            <Typography variant={'h4'} color={'#ffffff'}>
+              Pantry Items
+            </Typography>
+          </Box>
+          <Stack width="100%" spacing={2} overflow={'auto'}>
+            {inventory.map(({ name, quantity }) => (
+              <Box
+                key={name}
+                width="100%"
+                minHeight="150px"
+                display={'flex'}
+                justifyContent={'space-between'}
+                alignItems={'center'}
+                bgcolor={'#36393f'}
+                paddingX={5}
+                borderRadius={1}
+                position="relative"
+              >
+                <IconButton
+                  sx={{
+                    position: 'absolute',
+                    top: 8, // Adjust as needed
+                    right: 8, // Adjust as needed
+                    color: '#ffffff', // Set icon color
+                    '&:hover': {
+                      color: '#ff0000', // Optional: Change color on hover
+                    },
+                  }}
+                  onClick={() => removeItem(name, quantity)} // Adjust as needed
+                >
+                  <DeleteIcon />
+                </IconButton>
+                <Typography variant={'h6'} color={'#ffffff'} textAlign={'center'}>
+                  {name.charAt(0).toUpperCase() + name.slice(1)}
+                </Typography>
+                <Typography variant={'h6'} color={'#ffffff'} textAlign={'center'}>
+                  Quantity: {quantity}
+                </Typography>
+                <Stack direction={'row'} spacing={2}>
+                  <Button
+                    variant="contained"
+                    onClick={() => addItem(name, 1)}
+                    sx={{
+                      bgcolor: '#5865F2', 
+                      '&:hover': {
+                        bgcolor: '#4752C4', 
+                      },
+                    }}
+                  >
+                    Add
+                  </Button>
+                  <Button
+                    variant="contained"
+                    onClick={() => removeItem(name, 1)}
+                    sx={{
+                      bgcolor: '#5865F2', 
+                      '&:hover': {
+                        bgcolor: '#4752C4',
+                      },
+                    }}
+                  >
+                    Remove
+                  </Button>
+                </Stack>
+              </Box>
+            ))}
+          </Stack>
+        </Box>
       </Box>
+
+      <Modal
+  open={open}
+  onClose={() => setOpen(false)}
+  aria-labelledby="modal-modal-title"
+  aria-describedby="modal-modal-description"
+>
+  <Box sx={style}>
+    <Typography id="modal-modal-title" variant="h6" component="h2">
+      Add Item
+    </Typography>
+    <Stack width="100%" direction={'row'} spacing={2}>
+      <TextField
+        id="outlined-basic"
+        label="Item"
+        variant="outlined"
+        fullWidth
+        value={itemName}
+        onChange={(e) => setItemName(e.target.value)}
+      />
+      <TextField
+        id="outlined-quantity"
+        label="Quantity"
+        variant="outlined"
+        fullWidth
+        value={quantity}
+        onChange={handleQuantityChange}
+      />
+      <Button
+        variant="outlined"
+        onClick={() => {
+          addItem(itemName, Number(quantity))
+          setItemName('')
+          setQuantity(1)
+          setOpen(false)
+        }}
+      >
+        Add
+      </Button>
+    </Stack>
+  </Box>
+</Modal>
+
+
     </Box>
   )
 }
