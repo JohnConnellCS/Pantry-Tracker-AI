@@ -32,6 +32,7 @@ export default function Home() {
   const [inventory, setInventory] = useState([])
   const [open, setOpen] = useState(false)
   const [itemName, setItemName] = useState('')
+  const [quantity, setQuantity] = useState(1)
 
   const updateInventory = async () => {
     const snapshot = query(collection(firestore, 'inventory'))
@@ -47,31 +48,17 @@ export default function Home() {
     updateInventory()
   }, [])
   
-  const addItem = async (item) => {
+  const addItem = async (item, quantity) => {
     const docRef = doc(collection(firestore, 'inventory'), item)
     const docSnap = await getDoc(docRef)
     if (docSnap.exists()) {
-      const { quantity } = docSnap.data()
-      await setDoc(docRef, { quantity: quantity + 1 })
+      const { quantity: existingQuantity } = docSnap.data()
+      await setDoc(docRef, { quantity: Number(quantity) + existingQuantity })
     } else {
-      await setDoc(docRef, { quantity: 1 })
+      await setDoc(docRef, { quantity: Number(quantity) })
     }
     await updateInventory()
   }
-
-  const updateQuantity = async (item, quantityToAdd) => {
-    const docRef = doc(collection(firestore, 'inventory'), item);
-    const docSnap = await getDoc(docRef);
-  
-    if (docSnap.exists()) {
-      const { quantity } = docSnap.data();
-      await setDoc(docRef, { quantity: quantity + quantityToAdd }, { merge: true });
-    } else {
-      await setDoc(docRef, { quantity: quantityToAdd });
-    }
-  
-    await updateInventory();
-  };
   
   const removeItem = async (item) => {
     const docRef = doc(collection(firestore, 'inventory'), item)
@@ -121,11 +108,20 @@ export default function Home() {
               value={itemName}
               onChange={(e) => setItemName(e.target.value)}
             />
+            <TextField
+              id="outlined-basic"
+              label="Quantity"
+              variant="outlined"
+              fullWidth
+              value={quantity}
+              onChange={(e) => setQuantity(e.target.value)}
+            />
             <Button
               variant="outlined"
               onClick={() => {
-                addItem(itemName)
+                addItem(itemName, quantity)
                 setItemName('')
+                setQuantity(1)
                 handleClose()
               }}
             >
@@ -170,9 +166,6 @@ export default function Home() {
               </Typography>
               <Button variant="contained" onClick={() => removeItem(name)}>
                 Remove Item
-              </Button>
-              <Button variant="contained" onClick={() => updateQuantity(name)}>
-                Update Quantity
               </Button>
             </Box>
           ))}
