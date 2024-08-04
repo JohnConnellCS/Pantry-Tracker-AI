@@ -33,6 +33,7 @@ export default function Home() {
   const [open, setOpen] = useState(false)
   const [itemName, setItemName] = useState('')
   const [quantity, setQuantity] = useState(1)
+  const [removeQuantity, setRemoveQuantity] = useState(0)
 
   const updateInventory = async () => {
     const snapshot = query(collection(firestore, 'inventory'))
@@ -48,31 +49,62 @@ export default function Home() {
     updateInventory()
   }, [])
   
+  const handleQuantityChange = (e) => {
+    const value = e.target.value
+    // Set quantity to the input value if it's a valid number, otherwise reset to 0
+    const parsedValue = Number(value)
+    setQuantity(isNaN(parsedValue) ? 0 : parsedValue)
+  }
+
   const addItem = async (item, quantity) => {
+    const parsedQuantity = Number(quantity)
+    if (isNaN(parsedQuantity) || parsedQuantity <= 0) {
+      console.log("Quantity must be a positive number");
+      setQuantity(0) // Reset the quantity to 0
+      return
+    }
+    
     const docRef = doc(collection(firestore, 'inventory'), item)
     const docSnap = await getDoc(docRef)
     if (docSnap.exists()) {
       const { quantity: existingQuantity } = docSnap.data()
-      await setDoc(docRef, { quantity: Number(quantity) + existingQuantity })
+      await setDoc(docRef, { quantity: parsedQuantity + existingQuantity })
     } else {
-      await setDoc(docRef, { quantity: Number(quantity) })
+      await setDoc(docRef, { quantity: parsedQuantity })
     }
     await updateInventory()
   }
+
+
+  const handleRemoveQuantityChange = (e) => {
+    const value = e.target.value
+    // Set removeQuantity to the input value if it's a valid number, otherwise reset to 0
+    const parsedValue = Number(value)
+    setRemoveQuantity(isNaN(parsedValue) ? 0 : parsedValue)
+  }
   
-  const removeItem = async (item) => {
-    const docRef = doc(collection(firestore, 'inventory'), item)
+  const removeItem = async (name, removeQuantity) => {
+    if (removeQuantity <= 0) {
+      console.log("Remove quantity must be a positive number")
+      return
+    }
+  
+    const docRef = doc(collection(firestore, 'inventory'), name)
     const docSnap = await getDoc(docRef)
     if (docSnap.exists()) {
       const { quantity } = docSnap.data()
-      if (quantity === 1) {
-        await deleteDoc(docRef)
+      const newQuantity = quantity - removeQuantity
+  
+      if (newQuantity > 0) {
+        await setDoc(docRef, { quantity: newQuantity })
       } else {
-        await setDoc(docRef, { quantity: quantity - 1 })
+        await deleteDoc(docRef)
       }
+  
+      await updateInventory()
     }
-    await updateInventory()
   }
+  
   
   const handleOpen = () => setOpen(true)
   const handleClose = () => setOpen(false)
@@ -109,19 +141,19 @@ export default function Home() {
               onChange={(e) => setItemName(e.target.value)}
             />
             <TextField
-              id="outlined-basic"
+              id="outlined-quantity"
               label="Quantity"
               variant="outlined"
               fullWidth
               value={quantity}
-              onChange={(e) => setQuantity(e.target.value)}
+              onChange={handleQuantityChange}
             />
             <Button
               variant="outlined"
               onClick={() => {
-                addItem(itemName, quantity)
+                addItem(itemName, Number(quantity))
                 setItemName('')
-                setQuantity(1)
+                setQuantity('')
                 handleClose()
               }}
             >
@@ -143,11 +175,11 @@ export default function Home() {
           alignItems={'center'}
         >
           <Typography variant={'h2'} color={'#333'} textAlign={'center'}>
-            Inventory Items
+            My Pantry
           </Typography>
         </Box>
         <Stack width="800px" height="300px" spacing={2} overflow={'auto'}>
-          {inventory.map(({name, quantity}) => (
+          {inventory.map(({ name, quantity }) => (
             <Box
               key={name}
               width="100%"
@@ -164,9 +196,20 @@ export default function Home() {
               <Typography variant={'h3'} color={'#333'} textAlign={'center'}>
                 Quantity: {quantity}
               </Typography>
-              <Button variant="contained" onClick={() => removeItem(name)}>
-                Remove Item
-              </Button>
+              <Stack direction={'row'} spacing={2}>
+                <Button
+                  variant="contained"
+                  onClick={() => addItem(name, 1)}
+                >
+                  Add
+                </Button>
+                <Button
+                  variant="contained"
+                  onClick={() => removeItem(name, 1)}
+                >
+                  Remove
+                </Button>
+              </Stack>
             </Box>
           ))}
         </Stack>
