@@ -3,7 +3,8 @@
 import { useState, useEffect } from 'react'
 import { Box, Button, Modal, Stack, TextField, Typography, IconButton } from '@mui/material'
 import { firestore } from '@/firebase'
-import DeleteIcon from '@mui/icons-material/Delete';
+import { fetchRecipes } from '@/app/openai'; // Import the fetchRecipes function
+import DeleteIcon from '@mui/icons-material/Delete'
 import {
   collection,
   doc,
@@ -36,6 +37,7 @@ export default function Home() {
   const [quantity, setQuantity] = useState(1)
   const [removeQuantity, setRemoveQuantity] = useState(0)
   const [showForm, setShowForm] = useState(false);
+  const [recipes, setRecipes] = useState('');
 
 
   const updateInventory = async () => {
@@ -51,6 +53,13 @@ export default function Home() {
   useEffect(() => {
     updateInventory()
   }, [])
+
+  const getRecipes = async () => {
+    const ingredients = inventory.map(item => item.name);
+    const key = ingredients.join(',');
+    const fetchedRecipes = await fetchRecipes(ingredients);
+    setRecipes(fetchedRecipes);
+  };
   
   const handleQuantityChange = (e) => {
     const value = e.target.value
@@ -125,7 +134,7 @@ export default function Home() {
       {/* Top Section */}
       <Box textAlign="center" marginBottom={4} >
         <Typography variant="h3" color="#ffffff">Pantry Tracker AI</Typography>
-        <Typography variant="h6" color="#ffffff">Manage your pantry items</Typography>
+        <Typography variant="h6" color="#ffffff">Manage your Inventory and AI-Powered Recommendations</Typography>
       </Box>
 
       {/* Main Content */}
@@ -241,17 +250,35 @@ export default function Home() {
             </Box>
           )}
 
-          {/* Future Content Section */}
-          <Box
+           {/* Future Content Section */}
+           <Box
             flex="1"
-            bgcolor="#d0d0d0" // Medium gray background for the section
+            bgcolor='#36393f' 
             borderRadius={1}
             padding={2}
             display="flex"
+            flexDirection="column"
             alignItems="center"
             justifyContent="center"
           >
-            <Typography color="#666">Funny AI That Definitely Works!</Typography>
+            <Button
+              variant="contained"
+              onClick={getRecipes}
+              sx={{
+                bgcolor: '#5865F2',
+                '&:hover': {
+                  bgcolor: '#4752C4',
+                },
+              }}
+            >
+              Get Recipes
+            </Button>
+            <Box
+              bgcolor='#36393f'
+              color = "#ffffff"
+              component="div"
+              dangerouslySetInnerHTML={{ __html: recipes || "No recipes yet. Click 'Get Recipes' to find recipes based on your ingredients!" }}
+              />            
           </Box>
         </Box>
 
@@ -273,7 +300,7 @@ export default function Home() {
             borderRadius={1}
           >
             <Typography variant={'h4'} color={'#ffffff'}>
-              Pantry Items
+              Current Ingredients
             </Typography>
           </Box>
           <Stack width="100%" spacing={2} overflow={'auto'}>
