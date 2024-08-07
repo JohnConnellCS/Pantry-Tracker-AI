@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from 'react'
 import { Box, Button, Modal, Stack, TextField, Typography, IconButton } from '@mui/material'
-import { Box, Button, Modal, Stack, TextField, Typography, IconButton } from '@mui/material'
 import { firestore } from '@/firebase'
 import { fetchRecipes } from '@/app/openai'; // Import the fetchRecipes function
 import DeleteIcon from '@mui/icons-material/Delete'
@@ -126,8 +125,6 @@ export default function Home() {
 
   return (
     <Box
-      display="flex"
-      flexDirection="column"
       display="flex"
       flexDirection="column"
       height="100vh"
@@ -373,48 +370,6 @@ export default function Home() {
       </Box>
 
       <Modal
-  open={open}
-  onClose={() => setOpen(false)}
-  aria-labelledby="modal-modal-title"
-  aria-describedby="modal-modal-description"
->
-  <Box sx={style}>
-    <Typography id="modal-modal-title" variant="h6" component="h2">
-      Add Item
-    </Typography>
-    <Stack width="100%" direction={'row'} spacing={2}>
-      <TextField
-        id="outlined-basic"
-        label="Item"
-        variant="outlined"
-        fullWidth
-        value={itemName}
-        onChange={(e) => setItemName(e.target.value)}
-      />
-      <TextField
-        id="outlined-quantity"
-        label="Quantity"
-        variant="outlined"
-        fullWidth
-        value={quantity}
-        onChange={handleQuantityChange}
-      />
-      <Button
-        variant="outlined"
-        onClick={() => {
-          addItem(itemName, Number(quantity))
-          setItemName('')
-          setQuantity(1)
-          setOpen(false)
-        }}
-      >
-        Add
-      </Button>
-    </Stack>
-  </Box>
-</Modal>
-
-
   open={open}
   onClose={() => setOpen(false)}
   aria-labelledby="modal-modal-title"
